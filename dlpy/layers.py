@@ -244,7 +244,7 @@ class Layer(object):
             self._inbound_nodes = [Node(src_layer, self) for src_layer in self.src_layers]
             self.tensor = [Tensor(output_layer) for output_layer in self.output_layers]
             for tensor, output_layer in zip(self.tensor, self.output_layers):
-                tensor.shape = output_layer
+                tensor.shape = output_layer.output_size
         else:
             self._inbound_nodes = Node(self.src_layers, self)
             self.tensor = Tensor(self)  # return Tensor object
@@ -2200,6 +2200,12 @@ class Segmentation(Layer):
         Specifies the factor used to scale target values for a segmentation layer.
     src_layers : iterable Layer, optional
         Specifies the layers directed to this layer.
+    output_image_type: string, optional
+        Specifies the output image type of this layer.
+        possible values: [ WIDE, PNG, BASE64 ]
+        default: WIDE
+    output_image_prob: bool, options
+        Does not include probabilities if doing classification (default).
 
     Returns
     -------
@@ -2212,7 +2218,8 @@ class Segmentation(Layer):
     can_be_last_layer = True
     number_of_instances = 0
 
-    def __init__(self, name=None, act=None, error=None, target_scale=1.0, src_layers=None, **kwargs):
+    def __init__(self, name=None, act=None, error=None, target_scale=1.0, src_layers=None, output_image_type=None,
+                 output_image_prob=None, **kwargs):
         parameters = locals()
         parameters = _unpack_config(parameters)
         # _clean_parameters(parameters)

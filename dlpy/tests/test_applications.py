@@ -39,38 +39,39 @@ class TestApplications(unittest.TestCase):
     server_sep = '/'
     data_dir = None
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
-        cls.s = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.s)
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
 
-        cls.server_sep = '\\'
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = '/'
+        self.server_sep = '\\'
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = '/'
 
         if 'DLPY_DATA_DIR' in os.environ:
-            cls.data_dir = os.environ.get('DLPY_DATA_DIR')
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get('DLPY_DATA_DIR')
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
-        filename = os.path.join('datasources', 'sample_syntax_for_test.json')
-        project_path = os.path.dirname(os.path.abspath(__file__))
-        full_filename = os.path.join(project_path, filename)
-        with open(full_filename) as f:
-            cls.sample_syntax = json.load(f)
+        try:
+            filename = os.path.join('datasources', 'sample_syntax_for_test.json')
+            project_path = os.path.dirname(os.path.abspath(__file__))
+            full_filename = os.path.join(project_path, filename)
+            with open(full_filename) as f:
+                self.sample_syntax = json.load(f)
+        except:
+            self.sample_syntax = None
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         # tear down tests
         try:
-            cls.s.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.s
+        del self.s
         swat.reset_option()
 
     def test_resnet50_caffe(self):
@@ -762,6 +763,8 @@ class TestApplications(unittest.TestCase):
 
     def test_fast_rcnn_2(self):
         from dlpy.applications import Faster_RCNN
+        if self.sample_syntax is None:
+            unittest.TestCase.skipTest(self, "sample_syntax file is not loaded")
         anchor_num_to_sample = 64
         anchor_ratio = [2312312, 2, 2]
         anchor_scale = [1.2, 2.3, 3.4, 5.6]
@@ -913,3 +916,49 @@ class TestApplications(unittest.TestCase):
                                  width=224, height=224,
                                  n_classes=1000, include_top=True)
         model.print_summary()
+
+    def test_efficientnet(self):
+        effnetb0 = EfficientNetB0(self.s, model_table='EfficientNetB0', n_classes=1000)
+        effnetb1 = EfficientNetB1(self.s, model_table='EfficientNetB1', n_classes=1000)
+        effnetb2 = EfficientNetB2(self.s, model_table='EfficientNetB2', n_classes=1000)
+        effnetb3 = EfficientNetB3(self.s, model_table='EfficientNetB3', n_classes=1000)
+        effnetb4 = EfficientNetB4(self.s, model_table='EfficientNetB4', n_classes=1000)
+        effnetb5 = EfficientNetB5(self.s, model_table='EfficientNetB5', n_classes=1000)
+        effnetb6 = EfficientNetB6(self.s, model_table='EfficientNetB6', n_classes=1000)
+        effnetb7 = EfficientNetB7(self.s, model_table='EfficientNetB7', n_classes=1000)
+
+        print(self.s.tableinfo())
+        # number of model parameters
+        self.assertTrue(effnetb0.num_params == 5288548)
+        self.assertTrue(effnetb1.num_params == 7794184)
+        self.assertTrue(effnetb2.num_params == 9109994)
+        self.assertTrue(effnetb3.num_params == 12233232)
+        self.assertTrue(effnetb4.num_params == 19341616)
+        self.assertTrue(effnetb5.num_params == 30389784)
+        self.assertTrue(effnetb6.num_params == 43040704)
+        self.assertTrue(effnetb7.num_params == 66347960)
+
+        # input shape of fficientnet models
+        self.assertTrue(effnetb0.input_layers[0].output_size==(224,224,3))
+        self.assertTrue(effnetb1.input_layers[0].output_size==(240,240,3))
+        self.assertTrue(effnetb2.input_layers[0].output_size==(260,260,3))
+        self.assertTrue(effnetb3.input_layers[0].output_size==(300,300,3))
+        self.assertTrue(effnetb4.input_layers[0].output_size==(380,380,3))
+        self.assertTrue(effnetb5.input_layers[0].output_size==(456,456,3))
+        self.assertTrue(effnetb6.input_layers[0].output_size==(528,528,3))
+        self.assertTrue(effnetb7.input_layers[0].output_size==(600,600,3))
+
+    def test_enet(self):
+        from dlpy.applications import ENet
+        model = ENet(self.s, width=512, height=512)
+        self.assertTrue(len(model.layers) == 150)
+        self.assertTrue(model.layers[29].output_size == (128, 128, 16))
+        model.print_summary()
+        model = ENet(self.s, width=256, height=256)
+        model.print_summary()
+        self.assertEqual(model.summary.iloc[148, -1], 18874368)
+
+
+if __name__ == '__main__':
+    unittest.main()
+
