@@ -2104,7 +2104,7 @@ class Model(Network):
 
     def heat_map_analysis(self, data=None, mask_width=None, mask_height=None, step_size=None,
                           display=True, img_type='A', image_id=None, filename=None, inputs="_image_",
-                          target="_label_", max_display=5, **kwargs):
+                          target="_label_", max_display=5, cmap=None, **kwargs):
         """
         Conduct a heat map analysis on table of images
 
@@ -2136,6 +2136,8 @@ class Model(Network):
         max_display : int, optional
             Maximum number of images to display. Heatmap takes a significant amount
             of time to run so a max of 5 is default.
+        cmap : str, optional
+            Name of a Matplotlib color map to use.  Defaults to 'jet_r'.
         **kwargs : keyword arguments, optional
             Specifies the optional arguments for the dlScore action.
 
@@ -2182,6 +2184,8 @@ class Model(Network):
 
         from .images import ImageTable
 
+        cmap = cmap or 'jet_r'
+        
         run_predict = True
         if data is None and self.valid_res_tbl is None:
             raise ValueError('No input data and model.predict() has not been run')
@@ -2387,14 +2391,14 @@ class Model(Network):
 
                 color_bar = axs[im_idx][2].imshow(heat_map, vmax=vmax, vmin=vmin,
                                                   interpolation='none',
-                                                  extent=extent, cmap='jet_r')
+                                                  extent=extent, cmap=cmap)
                 axs[im_idx][2].axis('off')
                 axs[im_idx][2].set_title('Heat Map')
 
                 axs[im_idx][1].imshow(img, extent=extent)
                 axs[im_idx][1].imshow(heat_map, vmax=vmax, vmin=vmin,
                                       interpolation='none', alpha=0.5,
-                                      extent=extent, cmap='jet_r')
+                                      extent=extent, cmap=cmap)
                 axs[im_idx][1].axis('off')
                 axs[im_idx][1].set_title('Overlayed Image')
 
